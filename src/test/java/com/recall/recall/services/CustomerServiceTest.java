@@ -349,7 +349,6 @@ public class CustomerServiceTest {
 
     @Test
     @DisplayName("update customer - throw exception")
-    @SuppressWarnings("unchecked")
     public void shouldThrowExceptionWhenDataNotValid() {
         LocalDateTime now = LocalDateTime.now();
         Customer existingCustomer = new Customer();
