@@ -1,4 +1,4 @@
-package com.recall.recall.rest;
+package com.recall.recall.controller;
 
 import com.recall.recall.entity.Customer;
 import com.recall.recall.services.CustomerService;
@@ -8,6 +8,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+
 
 
 @RequestMapping("/api/v1/customers")

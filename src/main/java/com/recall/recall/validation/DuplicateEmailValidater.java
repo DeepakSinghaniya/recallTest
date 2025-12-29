@@ -5,10 +5,12 @@ import com.recall.recall.services.CustomerService;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+@Component
 public class DuplicateEmailValidater implements ConstraintValidator<DuplicateEmail, Customer> {
     @Autowired
-    CustomerService customerService;
+    public CustomerService customerService;
 
     @Override
     public void initialize(DuplicateEmail constraintAnnotation) {
