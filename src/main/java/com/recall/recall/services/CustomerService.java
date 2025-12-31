@@ -19,7 +19,6 @@ public class CustomerService {
     private final CustomerRepository customerRepository;
     private final Validator validator;
 
-    @Autowired
     public CustomerService(CustomerRepository customerRepository, Validator validator) {
         this.customerRepository = customerRepository;
         this.validator = validator;

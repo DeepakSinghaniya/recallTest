@@ -25,7 +25,9 @@ public class CustomerTest {
     @Test
     @DisplayName("create customer with constructor - with parameters")
     public void shouldCreateCustomerWithConstructor() {
-        Customer newCustomer = new Customer("test", "test@fake.com");
+        Customer newCustomer = new Customer();
+        newCustomer.setName("test");
+        newCustomer.setEmail("test@fake.com");
 
         assertNotNull(newCustomer);
         assertEquals("test", newCustomer.getName());
@@ -102,12 +104,12 @@ public class CustomerTest {
         customer.setEmail("test@fake.com");
         customer.setCreatedAt(testDateTime);
 
-        String expected = "Customer{" +
+        String expected = "Customer(" +
                 "id=" + 1L +
-                ", name='" + "test" + '\'' +
-                ", email='" + "test@fake.com" + '\'' +
+                ", name=" + "test" +
+                ", email=" + "test@fake.com" +
                 ", createdAt=" + testDateTime +
-                '}';
+                ')';
 
         assertEquals(expected, customer.toString());
     }
@@ -147,8 +149,12 @@ public class CustomerTest {
     @Test
     @DisplayName("customer id is independent")
     public void shouldHaveIndependentId() {
-        Customer customer1 = new Customer("test", "test@fake.com");
-        Customer customer2 = new Customer("test1", "test1@fake.com");
+        Customer customer1 = new Customer();
+        Customer customer2 = new Customer();
+        customer1.setName("test");
+        customer2.setName("test1");
+        customer1.setEmail("test@fake.com");
+        customer2.setEmail("test1@fake.com");
 
         customer1.setId(1L);
         customer2.setId(2L);
@@ -161,8 +167,13 @@ public class CustomerTest {
     @Test
     @DisplayName("multiple customers have independent data")
     public void shouldCreateMultipleIndependentCustomers() {
-        Customer customer1 = new Customer("test", "test@fake.com");
-        Customer customer2 = new Customer("test1", "test1@fake.com");
+        Customer customer1 = new Customer();
+        Customer customer2 = new Customer();
+
+        customer1.setName("test");
+        customer2.setName("test1");
+        customer1.setEmail("test@fake.com");
+        customer2.setEmail("test1@fake.com");
 
         customer1.setId(1L);
         customer2.setId(2L);
@@ -259,8 +270,13 @@ public class CustomerTest {
     @Test
     @DisplayName("customer constructors create independent instances")
     public void shouldCreateIndependentInstancesWithConstructors() {
-        Customer customer1 = new Customer("test", "test@fake.com");
-        Customer customer2 = new Customer("test1", "test1@fake.com");
+        Customer customer1 = new Customer();
+        Customer customer2 = new Customer();
+
+        customer1.setName("test");
+        customer2.setName("test1");
+        customer1.setEmail("test@fake.com");
+        customer2.setEmail("test1@fake.com");
 
         assertNotSame(customer1, customer2);
         assertNotEquals(customer1.getName(), customer2.getName());
