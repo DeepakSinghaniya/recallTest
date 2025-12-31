@@ -1,9 +1,9 @@
 package com.recall.recall.controller;
 
-import com.recall.recall.entity.Customer;
+import com.recall.recall.dto.CustomerRequestDTO;
+import com.recall.recall.dto.CustomerResponseDTO;
 import com.recall.recall.services.CustomerService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -22,27 +22,27 @@ public class CustomerController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Customer> getCustomerById(@PathVariable Long id) {
+    public ResponseEntity<CustomerResponseDTO> getCustomerById(@PathVariable Long id) {
         return customerService.getCustomerById(id)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping("")
-    public ResponseEntity<Page<Customer>> getAllCustomers(Pageable pageable) {
-        Page<Customer> customers = customerService.getAllCustomers(pageable);
-        return ResponseEntity.ok(customers);
+    public ResponseEntity<Page<CustomerResponseDTO>> getAllCustomers(Pageable pageable) {
+        Page<CustomerResponseDTO> customerResponseDTOs = customerService.getAllCustomers(pageable);
+        return ResponseEntity.ok(customerResponseDTOs);
     }
 
     @PostMapping("")
-    public ResponseEntity<Customer> createCustomer(@Valid @RequestBody Customer customer) {
-        Customer savedCustomer = customerService.createCustomer(customer);
+    public ResponseEntity<CustomerResponseDTO> createCustomer(@Valid @RequestBody CustomerRequestDTO customerRequestDTO) {
+        CustomerResponseDTO savedCustomer = customerService.createCustomer(customerRequestDTO);
         return ResponseEntity.ok(savedCustomer);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Customer> updateCustomer(@PathVariable Long id, @RequestBody Customer customer) {
-        Customer updated = customerService.updateCustomer(id, customer);
+    @PutMapping("")
+    public ResponseEntity<CustomerResponseDTO> updateCustomer(@Valid @RequestBody CustomerRequestDTO customerRequestDTO) {
+        CustomerResponseDTO updated = customerService.updateCustomer(customerRequestDTO);
         return ResponseEntity.ok(updated);
     }
 

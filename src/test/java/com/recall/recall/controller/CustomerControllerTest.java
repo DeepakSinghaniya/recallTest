@@ -1,5 +1,7 @@
 package com.recall.recall.controller;
 
+import com.recall.recall.dto.CustomerRequestDTO;
+import com.recall.recall.dto.CustomerResponseDTO;
 import com.recall.recall.entity.Customer;
 import com.recall.recall.services.CustomerService;
 import org.junit.jupiter.api.DisplayName;
@@ -36,8 +38,8 @@ public class CustomerControllerTest {
     @MockitoBean
     private CustomerService customerService;
 
-    private Customer buildCustomer(Long id, String name, String email, LocalDateTime createdAt) {
-        Customer c = new Customer();
+    private CustomerResponseDTO buildCustomer(Long id, String name, String email, LocalDateTime createdAt) {
+        CustomerResponseDTO c = new CustomerResponseDTO();
         c.setId(id);
         c.setName(name);
         c.setEmail(email);
@@ -49,7 +51,7 @@ public class CustomerControllerTest {
     @DisplayName("GET /api/v1/customers/{id} returns customer when found")
     void getCustomerById_found() throws Exception {
         LocalDateTime now = LocalDateTime.now();
-        Customer customer = buildCustomer(1L, "test", "test@fake.com", now);
+        CustomerResponseDTO customer = buildCustomer(1L, "test", "test@fake.com", now);
         when(customerService.getCustomerById(1L)).thenReturn(Optional.of(customer));
 
         mockMvc.perform(get("/api/v1/customers/1"))
@@ -76,9 +78,9 @@ public class CustomerControllerTest {
     @DisplayName("GET /api/v1/customers returns paged list")
     void getAllCustomers() throws Exception {
         LocalDateTime now = LocalDateTime.now();
-        Customer c1 = buildCustomer(1L, "test", "test@fake.com", now);
-        Customer c2 = buildCustomer(2L, "test1", "test1@fake.com", now);
-        Page<Customer> page = new PageImpl<>(List.of(c1, c2), PageRequest.of(0, 10), 2);
+        CustomerResponseDTO c1 = buildCustomer(1L, "test", "test@fake.com", now);
+        CustomerResponseDTO c2 = buildCustomer(2L, "test1", "test1@fake.com", now);
+        Page<CustomerResponseDTO> page = new PageImpl<>(List.of(c1, c2), PageRequest.of(0, 10), 2);
         when(customerService.getAllCustomers(any(Pageable.class))).thenReturn(page);
 
         mockMvc.perform(get("/api/v1/customers?page=0&size=10"))
@@ -98,8 +100,8 @@ public class CustomerControllerTest {
     @DisplayName("POST /api/v1/customers creates customer")
     void createCustomer() throws Exception {
         LocalDateTime now = LocalDateTime.now();
-        Customer saved = buildCustomer(1L, "test", "test@fake.com", now);
-        when(customerService.createCustomer(any(Customer.class))).thenReturn(saved);
+        CustomerResponseDTO saved = buildCustomer(1L, "test", "test@fake.com", now);
+        when(customerService.createCustomer(any(CustomerRequestDTO.class))).thenReturn(saved);
 
         String json = "{\"name\":\"test\",\"email\":\"test@fake.com\"}";
 
@@ -111,19 +113,19 @@ public class CustomerControllerTest {
                 .andExpect(jsonPath("$.name", is("test")))
                 .andExpect(jsonPath("$.email", is("test@fake.com")));
 
-        verify(customerService, times(1)).createCustomer(any(Customer.class));
+        verify(customerService, times(1)).createCustomer(any(CustomerRequestDTO.class));
     }
 
     @Test
-    @DisplayName("PUT /api/v1/customers/{id} updates customer")
+    @DisplayName("PUT /api/v1/customers updates customer")
     void updateCustomer() throws Exception {
         LocalDateTime now = LocalDateTime.now();
-        Customer updated = buildCustomer(1L, "test-updated", "test-updated@fake.com", now);
-        when(customerService.updateCustomer(eq(1L), any(Customer.class))).thenReturn(updated);
+        CustomerResponseDTO updated = buildCustomer(1L, "test-updated", "test-updated@fake.com", now);
+        when(customerService.updateCustomer(any(CustomerRequestDTO.class))).thenReturn(updated);
 
-        String json = "{\"name\":\"test-updated\",\"email\":\"test-updated@fake.com\"}";
+        String json = "{\"id\":1,\"name\":\"test-updated\",\"email\":\"test-updated@fake.com\"}";
 
-        mockMvc.perform(put("/api/v1/customers/1")
+        mockMvc.perform(put("/api/v1/customers")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk())
@@ -131,7 +133,7 @@ public class CustomerControllerTest {
                 .andExpect(jsonPath("$.name", is("test-updated")))
                 .andExpect(jsonPath("$.email", is("test-updated@fake.com")));
 
-        verify(customerService, times(1)).updateCustomer(eq(1L), any(Customer.class));
+        verify(customerService, times(1)).updateCustomer(any(CustomerRequestDTO.class));
     }
 
     @Test

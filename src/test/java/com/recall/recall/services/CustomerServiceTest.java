@@ -1,5 +1,7 @@
 package com.recall.recall.services;
 
+import com.recall.recall.dto.CustomerRequestDTO;
+import com.recall.recall.dto.CustomerResponseDTO;
 import com.recall.recall.entity.Customer;
 import com.recall.recall.repository.CustomerRepository;
 import static org.junit.jupiter.api.Assertions.*;
@@ -43,8 +45,8 @@ public class CustomerServiceTest {
 
         when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
 
-        Optional<Customer> result = customerService.getCustomerById(1L);
-        Customer fetchedCustomer = result.orElse(null);
+        Optional<CustomerResponseDTO> result = customerService.getCustomerById(1L);
+        CustomerResponseDTO fetchedCustomer = result.orElse(null);
         assertNotNull(fetchedCustomer);
         assertEquals("test", fetchedCustomer.getName());
         assertEquals("test@fake.com", fetchedCustomer.getEmail());
@@ -81,7 +83,7 @@ public class CustomerServiceTest {
         when(customerRepository.findAll(any(Pageable.class)))
             .thenReturn(page);
 
-        Page<Customer> result = customerService.getAllCustomers(
+        Page<CustomerResponseDTO> result = customerService.getAllCustomers(
             PageRequest.of(0, 10)
         );
 
@@ -98,7 +100,7 @@ public class CustomerServiceTest {
     @DisplayName("create customer - success")
     public void shouldCreateCustomer() {
         LocalDateTime now = LocalDateTime.now();
-        Customer customerToCreate = new Customer();
+        CustomerRequestDTO customerToCreate = new CustomerRequestDTO();
         customerToCreate.setEmail("test@fake.com");
         customerToCreate.setName("test");
 
@@ -111,7 +113,7 @@ public class CustomerServiceTest {
         when(customerRepository.save(any(Customer.class)))
             .thenReturn(savedCustomer);
 
-        Customer result = customerService.createCustomer(customerToCreate);
+        CustomerResponseDTO result = customerService.createCustomer(customerToCreate);
 
         assertNotNull(result);
         assertEquals(3L, result.getId());
@@ -237,7 +239,8 @@ public class CustomerServiceTest {
         existingCustomer.setName("test");
         existingCustomer.setCreatedAt(now);
 
-        Customer updatedCustomer = new Customer();
+        CustomerRequestDTO updatedCustomer = new CustomerRequestDTO();
+        updatedCustomer.setId(1L);
         updatedCustomer.setName("test1");
         updatedCustomer.setEmail("test@fake.com");
 
@@ -252,7 +255,7 @@ public class CustomerServiceTest {
         when(customerRepository.save(any(Customer.class)))
             .thenReturn(savedCustomer);
 
-        Customer result = customerService.updateCustomer(1L, updatedCustomer);
+        CustomerResponseDTO result = customerService.updateCustomer( updatedCustomer);
 
         assertNotNull(result);
         assertEquals(1L, result.getId());
@@ -272,7 +275,8 @@ public class CustomerServiceTest {
         existingCustomer.setName("test");
         existingCustomer.setCreatedAt(now);
 
-        Customer updatedCustomer = new Customer();
+        CustomerRequestDTO updatedCustomer = new CustomerRequestDTO();
+        updatedCustomer.setId(1L);
         updatedCustomer.setName("test1");
         updatedCustomer.setEmail(null);
 
@@ -287,7 +291,7 @@ public class CustomerServiceTest {
         when(customerRepository.save(any(Customer.class)))
             .thenReturn(savedCustomer);
 
-        Customer result = customerService.updateCustomer(1L, updatedCustomer);
+        CustomerResponseDTO result = customerService.updateCustomer(updatedCustomer);
 
         assertNotNull(result);
         assertEquals("test2", result.getName());
@@ -306,7 +310,8 @@ public class CustomerServiceTest {
         existingCustomer.setName("test");
         existingCustomer.setCreatedAt(now);
 
-        Customer updatedCustomer = new Customer();
+        CustomerRequestDTO updatedCustomer = new CustomerRequestDTO();
+        updatedCustomer.setId(1L);
         updatedCustomer.setName(null);
         updatedCustomer.setEmail("newemail@fake.com");
 
@@ -321,7 +326,7 @@ public class CustomerServiceTest {
         when(customerRepository.save(any(Customer.class)))
             .thenReturn(savedCustomer);
 
-        Customer result = customerService.updateCustomer(1L, updatedCustomer);
+        CustomerResponseDTO result = customerService.updateCustomer(updatedCustomer);
 
         assertNotNull(result);
         assertEquals("test", result.getName());
@@ -333,7 +338,8 @@ public class CustomerServiceTest {
     @Test
     @DisplayName("update customer - customer not found")
     public void shouldThrowExceptionWhenUpdatingNonExistentCustomer() {
-        Customer updatedCustomer = new Customer();
+        CustomerRequestDTO updatedCustomer = new CustomerRequestDTO();
+        updatedCustomer.setId(99L);
         updatedCustomer.setName("test");
         updatedCustomer.setEmail("test@fake.com");
 
@@ -341,36 +347,9 @@ public class CustomerServiceTest {
             .thenReturn(Optional.empty());
 
         assertThrows(jakarta.persistence.EntityNotFoundException.class,
-            () -> customerService.updateCustomer(99L, updatedCustomer));
+            () -> customerService.updateCustomer(updatedCustomer));
 
         verify(customerRepository, times(1)).findById(99L);
         verify(customerRepository, never()).save(any(Customer.class));
     }
-
-    @Test
-    @DisplayName("update customer - throw exception")
-    public void shouldThrowExceptionWhenDataNotValid() {
-        LocalDateTime now = LocalDateTime.now();
-        Customer existingCustomer = new Customer();
-        existingCustomer.setId(1L);
-        existingCustomer.setEmail("test@fake.com");
-        existingCustomer.setName("test");
-        existingCustomer.setCreatedAt(now);
-
-        Customer updatedCustomer = new Customer();
-        updatedCustomer.setName("");
-        updatedCustomer.setEmail("invalid-email");
-
-        when(customerRepository.findById(1L))
-                .thenReturn(Optional.of(existingCustomer));
-        when(validator.validate(any(Customer.class)))
-                .thenReturn(Set.of(mock(jakarta.validation.ConstraintViolation.class)));
-
-        assertThrows(jakarta.validation.ConstraintViolationException.class,
-                () -> customerService.updateCustomer(1L, updatedCustomer));
-
-        verify(customerRepository, times(1)).findById(1L);
-        verify(customerRepository, never()).save(any(Customer.class));
-    }
-
 }

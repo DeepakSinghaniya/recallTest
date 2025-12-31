@@ -1,38 +1,43 @@
 package com.recall.recall.services;
 
+import com.recall.recall.dto.CustomerMapper;
+import com.recall.recall.dto.CustomerRequestDTO;
+import com.recall.recall.dto.CustomerResponseDTO;
 import com.recall.recall.entity.Customer;
 import com.recall.recall.repository.CustomerRepository;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.ConstraintViolationException;
-import jakarta.validation.Validator;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
-import java.util.Set;
 
 @Service
 public class CustomerService {
     private final CustomerRepository customerRepository;
-    private final Validator validator;
+    private final CustomerMapper customerMapper;
 
-    public CustomerService(CustomerRepository customerRepository, Validator validator) {
+    public CustomerService(CustomerRepository customerRepository, CustomerMapper customerMapper) {
         this.customerRepository = customerRepository;
-        this.validator = validator;
+        this.customerMapper = customerMapper;
     }
 
-    public Optional<Customer> getCustomerById(Long id) {
-        return customerRepository.findById(id);
+    public Optional<CustomerResponseDTO> getCustomerById(Long id) {
+        Optional<Customer> customer = customerRepository.findById(id);
+        return customer.map(customerMapper::toResponseDTO);
     }
-    public Page<Customer> getAllCustomers(Pageable pageable) {
-        return customerRepository.findAll(pageable);
+    public Page<CustomerResponseDTO> getAllCustomers(Pageable pageable) {
+        return customerRepository.findAll(pageable).map(customerMapper::toResponseDTO);
     }
-    public Customer createCustomer(Customer customer) {
-        return customerRepository.save(customer);
+
+    @Transactional
+    public CustomerResponseDTO createCustomer(CustomerRequestDTO customerRequestDTO) {
+        Customer customer = customerMapper.toEntity(customerRequestDTO);
+        Customer savedCustomer = customerRepository.save(customer);
+        return  customerMapper.toResponseDTO(savedCustomer);
     }
+
     public boolean existsByEmail(String email) {
         return customerRepository.existsByEmail(email);
     }
@@ -40,7 +45,7 @@ public class CustomerService {
         return customerRepository.existsByEmailAndIdNot(email, id);
     }
     public String deleteCustomer(Long id) {
-        Optional<Customer> customer = getCustomerById(id);
+        Optional<Customer> customer = customerRepository.findById(id);;
         if (customer.isPresent()) {
             customerRepository.delete(customer.get());
             return "Customer with id " + id + " deleted successfully";
@@ -48,21 +53,20 @@ public class CustomerService {
             return "Customer with id " + id + " not found";
         }
     }
-    public Customer updateCustomer(Long id, Customer updatedCustomer) {
-        Optional<Customer> optionalCustomer = getCustomerById(id);
+    @Transactional
+    public CustomerResponseDTO updateCustomer(CustomerRequestDTO customerRequestDTO) {
+        Long id = customerRequestDTO.getId();
+        Optional<Customer> optionalCustomer = customerRepository.findById(id);
         if (optionalCustomer.isEmpty()) {
             throw new EntityNotFoundException("Customer with id " + id + " not found");
         }
         Customer existingCustomer = optionalCustomer.get();
-        if(updatedCustomer.getName() != null)
-            existingCustomer.setName(updatedCustomer.getName());
-        if(updatedCustomer.getEmail() != null)
-            existingCustomer.setEmail(updatedCustomer.getEmail());
-        Set<ConstraintViolation<Customer>> violations = validator.validate(existingCustomer);
-        if (!violations.isEmpty()) {
-            throw new ConstraintViolationException(violations);
-        }
-        return customerRepository.save(existingCustomer);
+        if(customerRequestDTO.getName() != null)
+            existingCustomer.setName(customerRequestDTO.getName());
+        if(customerRequestDTO.getEmail() != null)
+            existingCustomer.setEmail(customerRequestDTO.getEmail());
+        Customer customer = customerRepository.save(existingCustomer);
+        return customerMapper.toResponseDTO(customer);
     }
 
 }

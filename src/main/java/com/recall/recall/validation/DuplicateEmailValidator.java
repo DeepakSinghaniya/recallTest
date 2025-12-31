@@ -1,29 +1,28 @@
 package com.recall.recall.validation;
 
-import com.recall.recall.entity.Customer;
+import com.recall.recall.dto.CustomerRequestDTO;
 import com.recall.recall.services.CustomerService;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
-public class DuplicateEmailValidater implements ConstraintValidator<DuplicateEmail, Customer> {
-    public CustomerService customerService;
-    DuplicateEmailValidater(CustomerService customerService){
-        this.customerService = customerService;
-    }
+@AllArgsConstructor
+public class DuplicateEmailValidator implements ConstraintValidator<DuplicateEmail, CustomerRequestDTO> {
+    private final CustomerService customerService;
 
     @Override
     public void initialize(DuplicateEmail constraintAnnotation) {
     }
 
     @Override
-    public boolean isValid(Customer customer, ConstraintValidatorContext context) {
-        if (customerService == null || customer == null || customer.getEmail() == null) {
+    public boolean isValid(CustomerRequestDTO customerRequestDTO, ConstraintValidatorContext context) {
+        if (customerService == null || customerRequestDTO == null || customerRequestDTO.getEmail() == null) {
             return true;
         }
-        Long id = customer.getId();
-        String email = customer.getEmail();
+        Long id = customerRequestDTO.getId();
+        String email = customerRequestDTO.getEmail();
         boolean isDuplicate;
         if (id == null) {
             isDuplicate = customerService.existsByEmail(email);
