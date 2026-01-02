@@ -4,7 +4,7 @@ import com.recall.recall.dto.CustomerRequestDTO;
 import com.recall.recall.dto.CustomerResponseDTO;
 import com.recall.recall.dto.ErrorResponseDTO;
 import com.recall.recall.dto.SuccessResponseDTO;
-import com.recall.recall.services.CustomerService;
+import com.recall.recall.services.CustomerServiceImpl;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,9 +17,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/customers")
 @RestController
 public class CustomerController {
-    private final CustomerService customerService;
+    private final CustomerServiceImpl customerService;
 
-    public CustomerController(CustomerService customerService) {
+    public CustomerController(CustomerServiceImpl customerService) {
         this.customerService = customerService;
     }
 
@@ -38,7 +38,6 @@ public class CustomerController {
 
     @PostMapping("")
     public ResponseEntity<CustomerResponseDTO> createCustomer(@Valid @RequestBody CustomerRequestDTO customerRequestDTO) {
-        System.out.println("Here ........1");
         CustomerResponseDTO savedCustomer = customerService.createCustomer(customerRequestDTO);
         return ResponseEntity.ok(savedCustomer);
     }

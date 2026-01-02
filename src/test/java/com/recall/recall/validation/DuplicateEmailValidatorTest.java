@@ -1,7 +1,7 @@
 package com.recall.recall.validation;
 
 import com.recall.recall.dto.CustomerRequestDTO;
-import com.recall.recall.services.CustomerService;
+import com.recall.recall.services.CustomerServiceImpl;
 import jakarta.validation.ConstraintValidatorContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -17,7 +17,7 @@ import static org.mockito.Mockito.*;
 class DuplicateEmailValidatorTest {
 
     @MockitoBean
-    private CustomerService customerService;
+    private CustomerServiceImpl customerService;
 
     @MockitoBean
     private ConstraintValidatorContext context;

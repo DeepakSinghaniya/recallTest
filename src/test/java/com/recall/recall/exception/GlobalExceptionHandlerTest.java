@@ -170,7 +170,7 @@ class GlobalExceptionHandlerTest {
         assertNotNull(body);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR.value(), body.get("status"));
         assertEquals("Internal Server Error", body.get("error"));
-        assertEquals("An unexpected error occurred. Please contact support.", body.get("message"));
+        assertEquals("Unexpected error occurred", body.get("message"));
         assertNotNull(body.get("timestamp"));
     }
 

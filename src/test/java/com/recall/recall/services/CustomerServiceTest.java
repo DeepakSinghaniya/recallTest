@@ -22,7 +22,6 @@ import jakarta.validation.Validator;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 @SpringBootTest
 public class CustomerServiceTest {

@@ -1,7 +1,7 @@
 package com.recall.recall.validation;
 
 import com.recall.recall.dto.CustomerRequestDTO;
-import com.recall.recall.services.CustomerService;
+import com.recall.recall.services.CustomerServiceImpl;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import lombok.AllArgsConstructor;
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 @Component
 @AllArgsConstructor
 public class DuplicateEmailValidator implements ConstraintValidator<DuplicateEmail, CustomerRequestDTO> {
-    private final CustomerService customerService;
+    private final CustomerServiceImpl customerService;
 
     @Override
     public void initialize(DuplicateEmail constraintAnnotation) {

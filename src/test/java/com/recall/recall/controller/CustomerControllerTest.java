@@ -2,7 +2,7 @@ package com.recall.recall.controller;
 
 import com.recall.recall.dto.CustomerRequestDTO;
 import com.recall.recall.dto.CustomerResponseDTO;
-import com.recall.recall.services.CustomerService;
+import com.recall.recall.services.CustomerServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +32,7 @@ public class CustomerControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private CustomerService customerService;
+    private CustomerServiceImpl customerService;
 
     private CustomerResponseDTO buildCustomer(Long id, String name, String email, LocalDateTime createdAt) {
         return CustomerResponseDTO.builder().id(id).name(name).email(email).createdAt(createdAt).build();
