@@ -7,6 +7,7 @@ import com.recall.recall.repository.CustomerRepository;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -100,15 +101,9 @@ public class CustomerServiceTest {
     @DisplayName("create customer - success")
     public void shouldCreateCustomer() {
         LocalDateTime now = LocalDateTime.now();
-        CustomerRequestDTO customerToCreate = new CustomerRequestDTO();
-        customerToCreate.setEmail("test@fake.com");
-        customerToCreate.setName("test");
+        CustomerRequestDTO customerToCreate = CustomerRequestDTO.builder().email("test@fake.com").name("test").build();
 
-        Customer savedCustomer = new Customer();
-        savedCustomer.setId(3L);
-        savedCustomer.setEmail("test@fake.com");
-        savedCustomer.setName("test");
-        savedCustomer.setCreatedAt(now);
+        Customer savedCustomer = Customer.builder().id(3L).email("test@fake.com").name("test").createdAt(now).build();
 
         when(customerRepository.save(any(Customer.class)))
             .thenReturn(savedCustomer);
@@ -200,18 +195,13 @@ public class CustomerServiceTest {
     @DisplayName("delete customer - success")
     public void shouldDeleteCustomer() {
         LocalDateTime now = LocalDateTime.now();
-        Customer customer = new Customer();
-        customer.setId(1L);
-        customer.setEmail("test@fake.com");
-        customer.setName("test");
-        customer.setCreatedAt(now);
+        Customer customer = Customer.builder().id(1L).email("test@fake.com").name("test").createdAt(now).build();
 
         when(customerRepository.findById(1L))
             .thenReturn(Optional.of(customer));
 
-        String result = customerService.deleteCustomer(1L);
+        customerService.deleteCustomer(1L);
 
-        assertEquals("Customer with id 1 deleted successfully", result);
         verify(customerRepository, times(1)).findById(1L);
         verify(customerRepository, times(1)).delete(customer);
     }
@@ -222,9 +212,9 @@ public class CustomerServiceTest {
         when(customerRepository.findById(99L))
             .thenReturn(Optional.empty());
 
-        String result = customerService.deleteCustomer(99L);
+        assertThrows(EntityNotFoundException.class,
+            () -> customerService.deleteCustomer(99L));
 
-        assertEquals("Customer with id 99 not found", result);
         verify(customerRepository, times(1)).findById(99L);
         verify(customerRepository, never()).delete(any(Customer.class));
     }
@@ -233,22 +223,11 @@ public class CustomerServiceTest {
     @DisplayName("update customer - success")
     public void shouldUpdateCustomer() {
         LocalDateTime now = LocalDateTime.now();
-        Customer existingCustomer = new Customer();
-        existingCustomer.setId(1L);
-        existingCustomer.setEmail("test@fake.com");
-        existingCustomer.setName("test");
-        existingCustomer.setCreatedAt(now);
+        Customer existingCustomer = Customer.builder().id(1L).email("test@fake.com").name("test").createdAt(now).build();
 
-        CustomerRequestDTO updatedCustomer = new CustomerRequestDTO();
-        updatedCustomer.setId(1L);
-        updatedCustomer.setName("test1");
-        updatedCustomer.setEmail("test@fake.com");
+        CustomerRequestDTO updatedCustomer = CustomerRequestDTO.builder().id(1L).name("test1").email("test@fake.com").build();
 
-        Customer savedCustomer = new Customer();
-        savedCustomer.setId(1L);
-        savedCustomer.setName("test2");
-        savedCustomer.setEmail("test2@fake.com");
-        savedCustomer.setCreatedAt(now);
+        Customer savedCustomer = Customer.builder().id(1L).name("test2").email("test2@fake.com").createdAt(now).build();
 
         when(customerRepository.findById(1L))
             .thenReturn(Optional.of(existingCustomer));
@@ -269,22 +248,11 @@ public class CustomerServiceTest {
     @DisplayName("update customer - update only name")
     public void shouldUpdateCustomerNameOnly() {
         LocalDateTime now = LocalDateTime.now();
-        Customer existingCustomer = new Customer();
-        existingCustomer.setId(1L);
-        existingCustomer.setEmail("test@fake.com");
-        existingCustomer.setName("test");
-        existingCustomer.setCreatedAt(now);
+        Customer existingCustomer = Customer.builder().id(1L).email("test@fake.com").name("test").createdAt(now).build();
 
-        CustomerRequestDTO updatedCustomer = new CustomerRequestDTO();
-        updatedCustomer.setId(1L);
-        updatedCustomer.setName("test1");
-        updatedCustomer.setEmail(null);
+        CustomerRequestDTO updatedCustomer = CustomerRequestDTO.builder().id(1L).name("test1").email(null).build();
 
-        Customer savedCustomer = new Customer();
-        savedCustomer.setId(1L);
-        savedCustomer.setName("test2");
-        savedCustomer.setEmail("test2@fake.com");
-        savedCustomer.setCreatedAt(now);
+        Customer savedCustomer = Customer.builder().id(1L).name("test2").email("test2@fake.com").createdAt(now).build();
 
         when(customerRepository.findById(1L))
             .thenReturn(Optional.of(existingCustomer));
@@ -310,16 +278,9 @@ public class CustomerServiceTest {
         existingCustomer.setName("test");
         existingCustomer.setCreatedAt(now);
 
-        CustomerRequestDTO updatedCustomer = new CustomerRequestDTO();
-        updatedCustomer.setId(1L);
-        updatedCustomer.setName(null);
-        updatedCustomer.setEmail("newemail@fake.com");
+        CustomerRequestDTO updatedCustomer = CustomerRequestDTO.builder().id(1L).name(null).email("newemail@fake.com").build();
 
-        Customer savedCustomer = new Customer();
-        savedCustomer.setId(1L);
-        savedCustomer.setName("test");
-        savedCustomer.setEmail("newemail@fake.com");
-        savedCustomer.setCreatedAt(now);
+        Customer savedCustomer = Customer.builder().id(1L).name("test").email("newemail@fake.com").createdAt(now).build();
 
         when(customerRepository.findById(1L))
             .thenReturn(Optional.of(existingCustomer));
@@ -338,15 +299,12 @@ public class CustomerServiceTest {
     @Test
     @DisplayName("update customer - customer not found")
     public void shouldThrowExceptionWhenUpdatingNonExistentCustomer() {
-        CustomerRequestDTO updatedCustomer = new CustomerRequestDTO();
-        updatedCustomer.setId(99L);
-        updatedCustomer.setName("test");
-        updatedCustomer.setEmail("test@fake.com");
+        CustomerRequestDTO updatedCustomer = CustomerRequestDTO.builder().id(99L).name("test").email("test@fake.com").build();
 
         when(customerRepository.findById(99L))
             .thenReturn(Optional.empty());
 
-        assertThrows(jakarta.persistence.EntityNotFoundException.class,
+        assertThrows(EntityNotFoundException.class,
             () -> customerService.updateCustomer(updatedCustomer));
 
         verify(customerRepository, times(1)).findById(99L);

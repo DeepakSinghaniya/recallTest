@@ -2,7 +2,6 @@ package com.recall.recall.controller;
 
 import com.recall.recall.dto.CustomerRequestDTO;
 import com.recall.recall.dto.CustomerResponseDTO;
-import com.recall.recall.entity.Customer;
 import com.recall.recall.services.CustomerService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,10 +21,7 @@ import java.util.Optional;
 
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -39,12 +35,7 @@ public class CustomerControllerTest {
     private CustomerService customerService;
 
     private CustomerResponseDTO buildCustomer(Long id, String name, String email, LocalDateTime createdAt) {
-        CustomerResponseDTO c = new CustomerResponseDTO();
-        c.setId(id);
-        c.setName(name);
-        c.setEmail(email);
-        c.setCreatedAt(createdAt);
-        return c;
+        return CustomerResponseDTO.builder().id(id).name(name).email(email).createdAt(createdAt).build();
     }
 
     @Test
@@ -139,11 +130,10 @@ public class CustomerControllerTest {
     @Test
     @DisplayName("DELETE /api/v1/customers/{id} deletes customer")
     void deleteCustomer() throws Exception {
-        when(customerService.deleteCustomer(1L)).thenReturn("Customer with id 1 deleted successfully");
+        doNothing().when(customerService).deleteCustomer(1L);
 
         mockMvc.perform(delete("/api/v1/customers/1"))
-                .andExpect(status().isOk())
-                .andExpect(content().string("Customer with id 1 deleted successfully"));
+                .andExpect(status().isOk());
 
         verify(customerService, times(1)).deleteCustomer(1L);
     }

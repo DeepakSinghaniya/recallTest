@@ -10,41 +10,14 @@ public class CustomerMapper {
         if (customer == null) {
             return null;
         }
-
-        CustomerResponseDTO dto = new CustomerResponseDTO();
-        dto.setId(customer.getId());
-        dto.setName(customer.getName());
-        dto.setEmail(customer.getEmail());
-        dto.setCreatedAt(customer.getCreatedAt());
-        return dto;
+        return CustomerResponseDTO.builder().id(customer.getId()).name(customer.getName()).email(customer.getEmail()).createdAt(customer.getCreatedAt()).build();
     }
 
     public Customer toEntity(CustomerRequestDTO requestDTO) {
         if (requestDTO == null) {
             return null;
         }
-
-        Customer customer = new Customer();
-        customer.setName(requestDTO.getName());
-        customer.setEmail(requestDTO.getEmail());
-        customer.setId(requestDTO.getId());
-        return customer;
-    }
-
-    public void updateEntityFromDTO(Customer customer, CustomerRequestDTO requestDTO) {
-        if (customer == null || requestDTO == null) {
-            return;
-        }
-
-        if(requestDTO.getId() != null){
-            customer.setId(requestDTO.getId());
-        }
-        if (requestDTO.getName() != null) {
-            customer.setName(requestDTO.getName());
-        }
-        if (requestDTO.getEmail() != null) {
-            customer.setEmail(requestDTO.getEmail());
-        }
+        return Customer.builder().id(requestDTO.getId()).name(requestDTO.getName()).email(requestDTO.getEmail()).build();
     }
 }
 
