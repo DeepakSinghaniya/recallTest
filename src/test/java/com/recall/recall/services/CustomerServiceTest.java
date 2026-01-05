@@ -1,5 +1,6 @@
 package com.recall.recall.services;
 
+import com.recall.recall.dto.CustomerPatchRequestDTO;
 import com.recall.recall.dto.CustomerRequestDTO;
 import com.recall.recall.dto.CustomerResponseDTO;
 import com.recall.recall.entity.Customer;
@@ -12,6 +13,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -65,16 +68,18 @@ public class CustomerServiceTest {
     @DisplayName("get all customers - success")
     public void shouldGetAllCustomers() {
         LocalDateTime now = LocalDateTime.now();
-        Customer customer1 = new Customer();
-        customer1.setEmail("test@fake.com");
-        customer1.setName("test");
-        customer1.setId(1L);
-        customer1.setCreatedAt(now);
-        Customer customer2 = new Customer();
-        customer2.setEmail("test1@fake.com");
-        customer2.setName("test1");
-        customer2.setId(2L);
-        customer2.setCreatedAt(now);
+        Customer customer1 = Customer.builder()
+            .id(1L)
+            .name("test")
+            .email("test@fake.com")
+            .createdAt(now)
+            .build();
+        Customer customer2 = Customer.builder()
+            .id(2L)
+            .name("test1")
+            .email("test1@fake.com")
+            .createdAt(now)
+            .build();
 
         PageImpl<Customer> page = new PageImpl<>(
             List.of(customer1, customer2)
@@ -97,6 +102,17 @@ public class CustomerServiceTest {
     }
 
     @Test
+    @DisplayName("get all customers - return empty page on database error")
+    public void shouldReturnEmptyPageGetAllCustomers() {
+        when(customerRepository.findAll(any(Pageable.class))).thenThrow(new DataIntegrityViolationException("Database error"));
+        Page<CustomerResponseDTO> result = customerService.getAllCustomers(
+                PageRequest.of(0, 10)
+        );
+        assertEquals(result, Page.empty());
+        verify(customerRepository, times(1)).findAll(any(Pageable.class));
+    }
+
+    @Test
     @DisplayName("create customer - success")
     public void shouldCreateCustomer() {
         LocalDateTime now = LocalDateTime.now();
@@ -115,6 +131,23 @@ public class CustomerServiceTest {
         assertEquals("test@fake.com", result.getEmail());
         assertEquals(now, result.getCreatedAt());
         verify(customerRepository, times(1)).save(any(Customer.class));
+    }
+
+    @Test
+    @DisplayName("create customer - fail when email exists")
+    public void shouldFailCreateCustomer() {
+        LocalDateTime now = LocalDateTime.now();
+        CustomerRequestDTO customerToCreate = CustomerRequestDTO.builder().email("test@fake.com").name("test").build();
+
+        Customer savedCustomer = Customer.builder().id(3L).email("test@fake.com").name("test").createdAt(now).build();
+        when(customerRepository.existsByEmail(any(String.class))).thenReturn(true);
+        when(customerRepository.save(any(Customer.class)))
+                .thenReturn(savedCustomer);
+
+        assertThrows(IllegalArgumentException.class,()->customerService.createCustomer(customerToCreate), "Email already exists");
+        verify(customerRepository, times(1)).existsByEmail(any(String.class));
+        verify(customerRepository, never()).save(any(Customer.class));
+
     }
 
     @Test
@@ -219,12 +252,25 @@ public class CustomerServiceTest {
     }
 
     @Test
+    @DisplayName("delete customer - database error")
+    public void shouldDbErrorWhenDeletingCustomer() {
+        when(customerRepository.findById(99L))
+                .thenReturn(Optional.empty());
+        doThrow(new DataIntegrityViolationException("Database error")).when(customerRepository).delete(any(Customer.class));
+        assertThrows(EntityNotFoundException.class,
+                () -> customerService.deleteCustomer(99L), "Database error");
+
+        verify(customerRepository, times(1)).findById(99L);
+        verify(customerRepository, never()).delete(any(Customer.class));
+    }
+
+    @Test
     @DisplayName("update customer - success")
     public void shouldUpdateCustomer() {
         LocalDateTime now = LocalDateTime.now();
         Customer existingCustomer = Customer.builder().id(1L).email("test@fake.com").name("test").createdAt(now).build();
 
-        CustomerRequestDTO updatedCustomer = CustomerRequestDTO.builder().id(1L).name("test1").email("test@fake.com").build();
+        CustomerRequestDTO updatedCustomer = CustomerRequestDTO.builder().name("test1").email("test@fake.com").build();
 
         Customer savedCustomer = Customer.builder().id(1L).name("test2").email("test2@fake.com").createdAt(now).build();
 
@@ -233,7 +279,7 @@ public class CustomerServiceTest {
         when(customerRepository.save(any(Customer.class)))
             .thenReturn(savedCustomer);
 
-        CustomerResponseDTO result = customerService.updateCustomer( updatedCustomer);
+        CustomerResponseDTO result = customerService.updateCustomer( 1L, updatedCustomer);
 
         assertNotNull(result);
         assertEquals(1L, result.getId());
@@ -249,7 +295,7 @@ public class CustomerServiceTest {
         LocalDateTime now = LocalDateTime.now();
         Customer existingCustomer = Customer.builder().id(1L).email("test@fake.com").name("test").createdAt(now).build();
 
-        CustomerRequestDTO updatedCustomer = CustomerRequestDTO.builder().id(1L).name("test1").email(null).build();
+        CustomerRequestDTO updatedCustomer = CustomerRequestDTO.builder().name("test1").email(null).build();
 
         Customer savedCustomer = Customer.builder().id(1L).name("test2").email("test2@fake.com").createdAt(now).build();
 
@@ -258,7 +304,7 @@ public class CustomerServiceTest {
         when(customerRepository.save(any(Customer.class)))
             .thenReturn(savedCustomer);
 
-        CustomerResponseDTO result = customerService.updateCustomer(updatedCustomer);
+        CustomerResponseDTO result = customerService.updateCustomer(1L, updatedCustomer);
 
         assertNotNull(result);
         assertEquals("test2", result.getName());
@@ -271,13 +317,9 @@ public class CustomerServiceTest {
     @DisplayName("update customer - update only email")
     public void shouldUpdateCustomerEmailOnly() {
         LocalDateTime now = LocalDateTime.now();
-        Customer existingCustomer = new Customer();
-        existingCustomer.setId(1L);
-        existingCustomer.setEmail("test@fake.com");
-        existingCustomer.setName("test");
-        existingCustomer.setCreatedAt(now);
+        Customer existingCustomer = Customer.builder().id(1L).email("test@fake.com").name("test").createdAt(now).build();
 
-        CustomerRequestDTO updatedCustomer = CustomerRequestDTO.builder().id(1L).name(null).email("newemail@fake.com").build();
+        CustomerRequestDTO updatedCustomer = CustomerRequestDTO.builder().name(null).email("newemail@fake.com").build();
 
         Customer savedCustomer = Customer.builder().id(1L).name("test").email("newemail@fake.com").createdAt(now).build();
 
@@ -286,7 +328,7 @@ public class CustomerServiceTest {
         when(customerRepository.save(any(Customer.class)))
             .thenReturn(savedCustomer);
 
-        CustomerResponseDTO result = customerService.updateCustomer(updatedCustomer);
+        CustomerResponseDTO result = customerService.updateCustomer(1L, updatedCustomer);
 
         assertNotNull(result);
         assertEquals("test", result.getName());
@@ -298,15 +340,84 @@ public class CustomerServiceTest {
     @Test
     @DisplayName("update customer - customer not found")
     public void shouldThrowExceptionWhenUpdatingNonExistentCustomer() {
-        CustomerRequestDTO updatedCustomer = CustomerRequestDTO.builder().id(99L).name("test").email("test@fake.com").build();
+        CustomerRequestDTO updatedCustomer = CustomerRequestDTO.builder().name("test").email("test@fake.com").build();
 
         when(customerRepository.findById(99L))
             .thenReturn(Optional.empty());
 
         assertThrows(EntityNotFoundException.class,
-            () -> customerService.updateCustomer(updatedCustomer));
+            () -> customerService.updateCustomer(99L, updatedCustomer));
 
         verify(customerRepository, times(1)).findById(99L);
         verify(customerRepository, never()).save(any(Customer.class));
+    }
+
+    @Test
+    @DisplayName("Update email if provided - fail when email exists for different customer")
+    public void shouldFailToUpdateEmailWhenEmailExistsForDifferentCustomer(){
+        Customer existingCustomer = Customer.builder().id(1L).name("test").email("test@ford.com").build();
+        String newEmail = "updatedTest@ford.com";
+        when(customerRepository.existsByEmailAndIdNot(newEmail, existingCustomer.getId()))
+            .thenReturn(true);
+        when(customerRepository.findById(1L))
+            .thenReturn(Optional.of(existingCustomer));
+        CustomerRequestDTO updatedCustomer = CustomerRequestDTO.builder().name("test").email(newEmail).build();
+        assertThrows(IllegalArgumentException.class, () -> customerService.updateCustomer(1L, updatedCustomer), "Email already exists");
+        verify(customerRepository, times(1)).findById(1L);
+        verify(customerRepository, never()).save(any(Customer.class));
+    }
+
+    @Test
+    @DisplayName("Update email if provided - fail when have some database error")
+    public void shouldFailToUpdateEmailWhenCustomerNotFound(){
+        Customer existingCustomer = Customer.builder().id(1L).name("test").email("test@ford.com").build();
+        String newEmail = "updatedTest@ford.com";
+
+        when(customerRepository.findById(1L))
+                .thenReturn(Optional.of(existingCustomer));
+        when(customerRepository.save(any(Customer.class))).thenThrow(new DataIntegrityViolationException("Database constraint violation"));
+        CustomerRequestDTO updatedCustomer = CustomerRequestDTO.builder().name("test").email(newEmail).build();
+        assertThrows(DataIntegrityViolationException.class, () -> customerService.updateCustomer(1L, updatedCustomer), "Database constraint violation");
+        verify(customerRepository, times(1)).findById(1L);
+        verify(customerRepository, times(1)).save(any(Customer.class));
+    }
+
+    @Test
+    @DisplayName("Patch email failer - fail when have some database error")
+    public void shouldFailToPatchEmailWhenCustomerNotFound(){
+        Customer existingCustomer = Customer.builder().id(1L).name("test").email("test@ford.com").build();
+        String newEmail = "updatedTest@ford.com";
+
+        when(customerRepository.findById(1L))
+                .thenReturn(Optional.of(existingCustomer));
+        when(customerRepository.save(any(Customer.class))).thenThrow(new DataIntegrityViolationException("Database constraint violation"));
+        CustomerPatchRequestDTO updatedCustomer = CustomerPatchRequestDTO.builder().name("test").email(newEmail).build();
+        assertThrows(DataIntegrityViolationException.class, () -> customerService.patchCustomer(1L, updatedCustomer), "Database constraint violation");
+        verify(customerRepository, times(1)).findById(1L);
+        verify(customerRepository, times(1)).save(any(Customer.class));
+    }
+
+    @Test
+    @DisplayName("patch customer - update only email")
+    public void patchUpdateCustomerEmailOnly() {
+        LocalDateTime now = LocalDateTime.now();
+        Customer existingCustomer = Customer.builder().id(1L).email("test@fake.com").name("test").createdAt(now).build();
+
+        CustomerPatchRequestDTO updatedCustomer = CustomerPatchRequestDTO.builder().name(null).email("newemail@fake.com").build();
+
+        Customer savedCustomer = Customer.builder().id(1L).name("test").email("newemail@fake.com").createdAt(now).build();
+
+        when(customerRepository.findById(1L))
+                .thenReturn(Optional.of(existingCustomer));
+        when(customerRepository.save(any(Customer.class)))
+                .thenReturn(savedCustomer);
+
+        CustomerResponseDTO result = customerService.patchCustomer(1L, updatedCustomer);
+
+        assertNotNull(result);
+        assertEquals("test", result.getName());
+        assertEquals("newemail@fake.com", result.getEmail());
+        verify(customerRepository, times(1)).findById(1L);
+        verify(customerRepository, times(1)).save(any(Customer.class));
     }
 }

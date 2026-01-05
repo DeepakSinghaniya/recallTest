@@ -1,5 +1,6 @@
 package com.recall.recall.controller;
 
+import com.recall.recall.dto.CustomerPatchRequestDTO;
 import com.recall.recall.dto.CustomerRequestDTO;
 import com.recall.recall.dto.CustomerResponseDTO;
 import com.recall.recall.services.CustomerServiceImpl;
@@ -22,6 +23,7 @@ import java.util.Optional;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.springframework.data.jpa.domain.AbstractPersistable_.id;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -108,15 +110,15 @@ public class CustomerControllerTest {
     }
 
     @Test
-    @DisplayName("PUT /api/v1/customers updates customer")
+    @DisplayName("PUT /api/v1/customers/1 updates customer")
     void updateCustomer() throws Exception {
         LocalDateTime now = LocalDateTime.now();
         CustomerResponseDTO updated = buildCustomer(1L, "test-updated", "test-updated@fake.com", now);
-        when(customerService.updateCustomer(any(CustomerRequestDTO.class))).thenReturn(updated);
+        when(customerService.updateCustomer(any(Long.class), any(CustomerRequestDTO.class))).thenReturn(updated);
 
         String json = "{\"id\":1,\"name\":\"test-updated\",\"email\":\"test-updated@fake.com\"}";
 
-        mockMvc.perform(put("/api/v1/customers")
+        mockMvc.perform(put("/api/v1/customers/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk())
@@ -124,7 +126,27 @@ public class CustomerControllerTest {
                 .andExpect(jsonPath("$.name", is("test-updated")))
                 .andExpect(jsonPath("$.email", is("test-updated@fake.com")));
 
-        verify(customerService, times(1)).updateCustomer(any(CustomerRequestDTO.class));
+        verify(customerService, times(1)).updateCustomer(any(Long.class), any(CustomerRequestDTO.class));
+    }
+
+    @Test
+    @DisplayName("Patch /api/v1/customers/1 updates customer")
+    void patchCustomer() throws Exception {
+        LocalDateTime now = LocalDateTime.now();
+        CustomerResponseDTO updated = buildCustomer(1L, "test-updated", "test-updated@fake.com", now);
+        when(customerService.patchCustomer(any(Long.class), any(CustomerPatchRequestDTO.class))).thenReturn(updated);
+
+        String json = "{\"email\":\"test-updated@fake.com\"}";
+
+        mockMvc.perform(patch("/api/v1/customers/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(1)))
+                .andExpect(jsonPath("$.name", is("test-updated")))
+                .andExpect(jsonPath("$.email", is("test-updated@fake.com")));
+
+        verify(customerService, times(1)).patchCustomer(any(Long.class), any(CustomerPatchRequestDTO.class));
     }
 
     @Test
