@@ -17,7 +17,7 @@ public class CustomerMapper {
         if (requestDTO == null) {
             return null;
         }
-        return Customer.builder().id(requestDTO.getId()).name(requestDTO.getName()).email(requestDTO.getEmail()).build();
+        return Customer.builder().name(requestDTO.getName()).email(requestDTO.getEmail()).build();
     }
 }
 

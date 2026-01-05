@@ -1,5 +1,6 @@
 package com.recall.recall.services;
 
+import com.recall.recall.dto.CustomerPatchRequestDTO;
 import com.recall.recall.dto.CustomerRequestDTO;
 import com.recall.recall.dto.CustomerResponseDTO;
 import org.springframework.data.domain.Page;
@@ -20,5 +21,7 @@ public interface CustomerService {
 
     void deleteCustomer(Long id);
 
-    CustomerResponseDTO updateCustomer(CustomerRequestDTO customerRequestDTO);
+    CustomerResponseDTO updateCustomer(Long id, CustomerRequestDTO customerRequestDTO);
+
+    CustomerResponseDTO patchCustomer(Long id, CustomerPatchRequestDTO customerPatchRequestDTO);
 }

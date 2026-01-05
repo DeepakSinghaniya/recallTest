@@ -1,5 +1,6 @@
 package com.recall.recall.controller;
 
+import com.recall.recall.dto.CustomerPatchRequestDTO;
 import com.recall.recall.dto.CustomerRequestDTO;
 import com.recall.recall.dto.CustomerResponseDTO;
 import com.recall.recall.dto.ErrorResponseDTO;
@@ -42,11 +43,19 @@ public class CustomerController {
         return ResponseEntity.ok(savedCustomer);
     }
 
-    @PutMapping("")
-    public ResponseEntity<CustomerResponseDTO> updateCustomer(@Valid @RequestBody CustomerRequestDTO customerRequestDTO) {
-        CustomerResponseDTO updated = customerService.updateCustomer(customerRequestDTO);
+    @PutMapping("/{id}")
+    public ResponseEntity<CustomerResponseDTO> updateCustomer(@PathVariable Long id, @Valid @RequestBody CustomerRequestDTO customerRequestDTO) {
+        CustomerResponseDTO updated = customerService.updateCustomer(id, customerRequestDTO);
         return ResponseEntity.ok(updated);
     }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<CustomerResponseDTO> patchCustomer(@PathVariable Long id, @Valid @RequestBody CustomerPatchRequestDTO customerPatchRequestDTO) {
+        CustomerResponseDTO updated = customerService.patchCustomer(id, customerPatchRequestDTO);
+        return ResponseEntity.ok(updated);
+    }
+
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteCustomer(@PathVariable Long id) {
